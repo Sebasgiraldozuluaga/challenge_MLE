@@ -209,3 +209,6 @@ __marimo__/
 *.claude 
 .claude/
 .claude/
+
+*.gcp/
+.gcp/
