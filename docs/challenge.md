@@ -523,7 +523,20 @@ api/test_api.py::TestBatchPipeline::test_should_failed_unkown_column_3 PASSED [ 
 api/test_api.py::TestBatchPipeline::test_should_get_predict PASSED       [100%]
 
 
-**Total**: **8/8 tests passing (100% success rate)**
+#### Stress Tests (PASSED)
+
+Results from CI/CD pipeline stress test execution:
+
+- **Total Requests**: 4,719
+- **Failures**: 0 (0.00%)
+- **Users**: 20 concurrent users
+- **Duration**: 30 seconds
+- **Average Response Time**: 105ms
+- **95th Percentile**: 140ms
+- **99th Percentile**: 160ms
+- **Max Response Time**: 290ms
+- **Requests per Second**: ~160 req/s
+
 
 ---
 
