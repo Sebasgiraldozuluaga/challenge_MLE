@@ -103,7 +103,7 @@ jobs:
 
       - name: Run stress tests
         run: |
-          pip install locust
+          pip install -r requirements-test.txt
           SERVICE_URL="${{ steps.get-url.outputs.SERVICE_URL }}"
 
           # Run locust stress test
