@@ -151,10 +151,73 @@ jobs:
           docker stop test-container
           docker rm test-container
 
+  stress-test:
+    name: Stress Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: delay-api:stress-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start API container
+        run: |
+          docker run -d --name stress-test-container -p 8000:8000 delay-api:stress-test
+          sleep 15
+
+      - name: Run stress tests
+        run: |
+          mkdir -p reports
+          locust -f tests/stress/api_stress.py \
+            --print-stats \
+            --html reports/stress-test.html \
+            --run-time 30s \
+            --headless \
+            --users 20 \
+            --spawn-rate 2 \
+            -H http://127.0.0.1:8000
+
+      - name: Upload stress test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stress-test-results
+          path: reports/stress-test.html
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop stress-test-container || true
+          docker rm stress-test-container || true
+
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [lint, test-model, test-api, docker-build]
+    needs: [lint, test-model, test-api, docker-build, stress-test]
     if: always()
 
     steps:
@@ -163,7 +226,8 @@ jobs:
           if [ "${{ needs.lint.result }}" = "success" ] && \
              [ "${{ needs.test-model.result }}" = "success" ] && \
              [ "${{ needs.test-api.result }}" = "success" ] && \
-             [ "${{ needs.docker-build.result }}" = "success" ]; then
+             [ "${{ needs.docker-build.result }}" = "success" ] && \
+             [ "${{ needs.stress-test.result }}" = "success" ]; then
             echo "✅ All CI checks passed!"
             exit 0
           else
@@ -172,5 +236,6 @@ jobs:
             echo "  Model Tests: ${{ needs.test-model.result }}"
             echo "  API Tests: ${{ needs.test-api.result }}"
             echo "  Docker Build: ${{ needs.docker-build.result }}"
+            echo "  Stress Tests: ${{ needs.stress-test.result }}"
             exit 1
           fi
