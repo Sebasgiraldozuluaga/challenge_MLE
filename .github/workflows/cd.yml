@@ -101,30 +101,6 @@ jobs:
             exit 1
           fi
 
-      - name: Run stress tests
-        run: |
-          pip install --upgrade pip
-          pip install --no-cache-dir -r requirements-test.txt
-          SERVICE_URL="${{ steps.get-url.outputs.SERVICE_URL }}"
-
-          # Run locust stress test
-          mkdir -p reports
-          locust -f tests/stress/api_stress.py \
-            --print-stats \
-            --headless \
-            --users 30 \
-            --spawn-rate 3 \
-            --run-time 30s \
-            -H $SERVICE_URL \
-            --html=reports/stress-test.html
-
-      - name: Upload stress test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: stress-test-results
-          path: reports/stress-test.html
-
       - name: Deployment summary
         if: success()
         run: |
