@@ -8,6 +8,11 @@ on:
     branches:
       - '*'
 
+# Evitar ejecuciones duplicadas cuando hay push y PR simultáneos
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   PYTHON_VERSION: '3.11'
 
