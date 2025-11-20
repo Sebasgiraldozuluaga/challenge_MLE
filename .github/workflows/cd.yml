@@ -101,22 +101,21 @@ jobs:
             exit 1
           fi
 
-      - name: Run stress tests (optional)
-        continue-on-error: true
+      - name: Run stress tests
         run: |
           pip install locust
           SERVICE_URL="${{ steps.get-url.outputs.SERVICE_URL }}"
 
           # Run locust stress test
-          cd tests/stress
-          locust -f api_stress.py \
+          mkdir -p reports
+          locust -f tests/stress/api_stress.py \
+            --print-stats \
             --headless \
-            --users 50 \
-            --spawn-rate 5 \
+            --users 30 \
+            --spawn-rate 3 \
             --run-time 30s \
-            --host=$SERVICE_URL \
-            --html=../../reports/stress-test.html \
-            || echo "Stress test completed with warnings"
+            -H $SERVICE_URL \
+            --html=reports/stress-test.html
 
       - name: Upload stress test results
         if: always()
